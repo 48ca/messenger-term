@@ -192,10 +192,17 @@ var ui = {
         ui.screen.render();
     },
 
-    showMainUI: function() {
-       ui.screen.realloc();
-    }
+    clear: function() {
+        ui.screen.realloc();
+    },
 
+    showMainUI: function(friends) {
+        ui.clear();
+
+        var list = blessed.list({
+
+        });
+    }
 };
 
 exports.ui = ui;
