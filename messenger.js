@@ -1,10 +1,13 @@
 var login = require("facebook-chat-api");
+var ui = require("./ui.js").ui;
 
 EMAIL = process.env.MESSENGER_EMAIL;
 PASSWORD = process.env.MESSENGER_PASSWORD;
 
 friends = []
 fr_by_uid = {}
+
+ui.initScreen();
 
 login({email: EMAIL, password: PASSWORD}, function(err, api) {
     if(err) return console.error(err);
