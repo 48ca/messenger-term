@@ -1,2 +1,2 @@
 (all):
-	gcc main.c -o messenger -lncurses
+	gcc main.c -o messencurses -lncurses
