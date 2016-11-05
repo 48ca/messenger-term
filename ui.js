@@ -190,7 +190,6 @@ var ui = {
     },
 
     threadPanel: null,
-    sendPanel: null,
     showMainUI: function(threads, select_callback) {
         ui.clear();
 
@@ -233,36 +232,54 @@ var ui = {
     clearThread: function() {
         if(!ui.threadPanel) return;
         ui.screen.remove(ui.threadPanel);
-        ui.screen.remove(ui.sendPanel);
+        ui.threadPanel = null;
         ui.screen.render();
     },
 
-    populate: function(threadID, history) {
+    populate: function(threadID, uid, history) {
         if(!ui.threadPanel) {
-            var messages = blessed.list({
+            ui.threadPanel = blessed.box({
                 parent: ui.screen,
                 left: "30%",
                 top: 0,
                 width: "70%",
-                height: "98%",
+                height: "100%",
                 style: {
-                    bg: "red"
+                    bg: "darkblue",
+                    fg: "white"
                 }
             });
+            var messages = blessed.log({
+                parent: ui.threadPanel,
+                left: 0,
+                top: 0,
+                height: "99%",
+                tags: true,
+                mouse: true,
+                border: 'line',
+                scrollback: 1000,
+                scrollbar: {
+                    ch: ' ',
+                    track: {
+                        bg: 'yellow'
+                    },
+                    style: {
+                        inverse: true
+                    }
+                }
+            });
+            /* TODO: Add names */
             history.forEach(function(msg) {
-                messages.pushItem(msg.body);
-            });
-            ui.threadPanel = messages;
-        }
-        if(!ui.sendPanel) {
-            var panel = blessed.textbox({
-                parent: ui.screen,
-                left: "30%",
-                width: "70%",
-                height: "2%",
-                top: "98%"
+                messages.log((uid == msg.userID ? "                              " : "") + msg.body);
             });
         }
+        var panel = blessed.textbox({
+            parent: ui.threadPanel,
+            left: 0,
+            width: "100%",
+            height: 1,
+            top: "99%"
+        });
         ui.screen.render();
     }
 };

@@ -23,16 +23,29 @@ var fb;
 
 var uid;
 
+var loaded_thread;
+
 function selectCallback(thread_name) {
     var thread = threads_by_name[thread_name];
+    loaded_thread = thread;
     fb.getThreadInfo(thread.threadID, function(err, info) {
         var lastMess = info.messageCount - 1;
         var firstMess = lastMess - 100 < 0 ? 0 : lastMess - 100
         fb.getThreadHistory(thread.threadID, firstMess, lastMess, undefined, function(err, history) {
-            ui.populate(thread.threadID, history);
+            ui.clearThread();
+            ui.populate(thread.threadID, uid, history);
         });
     });
-}
+};
+
+function addMessage(message) {
+    var thr = threads_by_id[message.threadID];
+    if(loaded_thread.threadID == thread.threadID) {
+        ui.populate(thread.threadID, uid, [message]);
+    } else {
+        ui.bringToTop(thread);
+    }
+};
 
 ui.showLoginPrompt(EMAIL, PASSWORD, function(email, password, callback) {
     EMAIL = email
@@ -77,10 +90,7 @@ ui.showLoginPrompt(EMAIL, PASSWORD, function(email, password, callback) {
 
             fb.listen(function(err, message) {
                 if(err) console.error(err);
-                author = message.senderID;
-                console.log("Message from " + fr_by_uid[author].fullName);
-                console.log(message.body);
-                // api.sendMessage(message.body, message.threadID);
+                addMessage(message);
             });
         });
     });
