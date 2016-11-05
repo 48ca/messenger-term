@@ -1,1 +1,1 @@
-# urxvmessenger
+# messenger-term
