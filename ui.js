@@ -1,14 +1,12 @@
 var blessed = require("blessed");
 
-var common_styles = {
-    fg: 'white',
-    bg: 'black',
-    focus: {
-        bg: 'black'
-    },
-    hover: {
-        bg: 'red'
-    }
+var label_styles = {
+    fg: "white",
+    bg: "darkgray"
+}
+var input_styles = {
+    fg: "white",
+    bg: "black"
 }
 
 var ui = {
@@ -36,18 +34,14 @@ var ui = {
             top: 0,
             width: "100%",
             height: "100%",
-            bg: 'gray'
+            bg: 'black'
         });
 
         var inbox = blessed.box({
             parent: form,
             height: 15,
             width: 60,
-            style: {
-                bg: 'black',
-                fg: 'white',
-                border: 'line'
-            },
+            style: label_styles,
             top: 'center',
             left: 'center'
         });
@@ -59,56 +53,50 @@ var ui = {
             width: 9,
             content: "Messenger",
             height: 1,
-            style: {
-                fg: "white"
-            }
+            style: label_styles
         });
 
         var username_label = blessed.text({
             parent: inbox,
-            top: 3,
+            top: 4,
             left: 5,
             width: 50,
-            content: "Username",
+            content: "Email",
             height: 1,
-            style: {
-                fg: "white"
-            }
+            style: label_styles
         });
 
         var password_label = blessed.text({
             parent: inbox,
-            top: 6,
+            top: 7,
             left: 5,
             width: 50,
-            content: "Password:",
+            content: "Password",
             height: 1,
-            style: {
-                fg: "white"
-            }
+            style: label_styles
         });
 
         var username_field = blessed.textbox({
             parent: inbox,
             content: _username,
-            top: 4,
+            top: 5,
             left: 5,
             width: 50,
             height: 1,
             inputOnFocus: true,
-            style: common_styles
+            style: input_styles
         });
 
         var password_field = blessed.textbox({
             parent: inbox,
             content: _password,
             censor: true,
-            top: 7,
+            top: 8,
             left: 5,
             width: 50,
             height: 1,
             inputOnFocus: true,
-            style: common_styles
+            style: input_styles
         });
 
         var submit = blessed.button({
@@ -127,6 +115,7 @@ var ui = {
             name: 'login',
             content: 'login',
             style: {
+                bg: "darkgray",
                 focus: {
                     bg: 'red'
                 },
@@ -152,6 +141,7 @@ var ui = {
             name: 'cancel',
             content: 'cancel',
             style: {
+                bg: "darkgray",
                 focus: {
                     bg: 'red'
                 },
@@ -185,6 +175,7 @@ var ui = {
 
         username_field.setValue(username);
         password_field.setValue(password);
+
         if(!username) username_field.focus();
         else if(!password) password_field.focus();
         else submit.focus();
@@ -193,15 +184,86 @@ var ui = {
     },
 
     clear: function() {
-        ui.screen.realloc();
+        ui.screen.children.forEach(function(ch) {
+            ui.screen.remove(ch);
+        });
     },
 
-    showMainUI: function(friends) {
+    threadPanel: null,
+    sendPanel: null,
+    showMainUI: function(threads, select_callback) {
         ui.clear();
 
         var list = blessed.list({
-
+            width: "30%",
+            height: "100%",
+            parent: ui.screen,
+            top: 0,
+            left: 0,
+            keys: true,
+            scrollable: true,
+            style: {
+                selected: {
+                    bg: "red",
+                },
+                item: {
+                    bg: "blue",
+                },
+                search: true,
+                bg: "green",
+                scrollbar: {
+                    bg: 'blue'
+                },
+                vi: true
+            }
         });
+        threads.forEach(function(thr) {
+            list.pushItem(thr.customName);
+        });
+
+        list.focus();
+
+        list.on('select', function(item) {
+            select_callback(item.content);
+        });
+
+        ui.screen.render();
+    },
+
+    clearThread: function() {
+        if(!ui.threadPanel) return;
+        ui.screen.remove(ui.threadPanel);
+        ui.screen.remove(ui.sendPanel);
+        ui.screen.render();
+    },
+
+    populate: function(threadID, history) {
+        if(!ui.threadPanel) {
+            var messages = blessed.list({
+                parent: ui.screen,
+                left: "30%",
+                top: 0,
+                width: "70%",
+                height: "98%",
+                style: {
+                    bg: "red"
+                }
+            });
+            history.forEach(function(msg) {
+                messages.pushItem(msg.body);
+            });
+            ui.threadPanel = messages;
+        }
+        if(!ui.sendPanel) {
+            var panel = blessed.textbox({
+                parent: ui.screen,
+                left: "30%",
+                width: "70%",
+                height: "2%",
+                top: "98%"
+            });
+        }
+        ui.screen.render();
     }
 };
 
