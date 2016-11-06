@@ -9,6 +9,9 @@ var input_styles = {
     bg: "black"
 }
 
+var thread_navigators = {}
+// The boxes on the left representing threads
+
 var ui = {
     screen: blessed.screen({
         smartCSR: true,
@@ -193,6 +196,7 @@ var ui = {
     showMainUI: function(threads, select_callback) {
         ui.clear();
 
+        /*
         var list = blessed.list({
             width: "30%",
             height: "100%",
@@ -216,14 +220,75 @@ var ui = {
                 vi: true
             }
         });
-        threads.forEach(function(thr) {
-            list.pushItem(thr.customName);
+        */
+        thread_navigators.parent = blessed.box({
+            scrollable: true,
+            width: "30%",
+            height: "100%",
+            parent: ui.screen,
+            top: 0,
+            left: 0,
+            style: {
+                bg: "blue"
+            },
+            vi: true,
+            scrollbar: {
+                style: {
+                }
+            },
         });
+        var list = thread_navigators.parent;
+        var thr_cnt = 0;
+        var height = 4;
 
-        list.focus();
+        var prev = null;
+        var prev_id = null;
+        var max_w = list.width - 6;
+        threads.forEach(function(thr) {
+            // list.pushItem(thr.customName);
+            var content_name = thr.customName.length > max_w ?
+                thr.customName.substring(max_w - 3).trim() + "..." : thr.customName;
+            var content_snip = thr.snippet.length > max_w ?
+                thr.snippet.substring(max_w - 3).trim() + "..." : thr.snippet;
+            var content = "\n   "  + thr.customName + "\n   " + thr.snippet;
+            thread_navigators[thr.threadID] = blessed.box({
+                parent: thread_navigators.parent,
+                width: "100%",
+                height: height,
+                left: 0,
+                top: height * thr_cnt++,
+                content: content,
+                style: {
+                    bg: thr.unreadCount > 0 ? 'magenta' : 'blue',
+                    focus: {
+                        bg: 'orange',
+                    }
+                }
+            });
+            var thr_nav = thread_navigators[thr.threadID];
+            if(prev) {
+                thr_nav.prev = prev;
+                prev.key(['down', 'right'], function() {
+                    thr_nav.focus();
+                });
+                thr_nav.key(['up', 'left'], function() {
+                    thr_nav.prev.focus();
+                });
+            }
+            prev = thr_nav;
+            prev_id = thr.threadID;
+        });
+        thread_navigators[threads[0].threadID]
+            .key(['up', 'left'], function() {
+                thread_navigators[prev_id].focus();
+            })
+        prev.key(['down', 'right'], function() {
+            thread_navigators[threads[0].threadID].focus();
+        });
+        thread_navigators[threads[0].threadID].focus()
 
         list.on('select', function(item) {
-            select_callback(item.content);
+            select_callback(item.content.split("\n")[0]);
         });
 
         ui.screen.render();
