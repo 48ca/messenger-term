@@ -229,50 +229,68 @@ var ui = {
         ui.screen.render();
     },
 
-    clearThread: function() {
+    threadLoading: function() {
+        if(!ui.threadPanel) ui.initThreadPanel();
+        var loadingBox = blessed.box({
+            parent: ui.threadPanel,
+            top: "center",
+            left: "center",
+            height: 7,
+            width: 21,
+            border: 'line',
+            content: '\n\n    Loading...'
+        });
+        ui.screen.render();
+    },
+
+    initThreadPanel: function() {
+        if(ui.threadPanel) return;
+        ui.threadPanel = blessed.box({
+            parent: ui.screen,
+            left: "30%",
+            top: 0,
+            width: "70%",
+            height: "100%",
+            style: {
+                bg: "darkblue",
+                fg: "white"
+            }
+        });
+    },
+
+    clearThreadPanel: function() {
         if(!ui.threadPanel) return;
-        ui.screen.remove(ui.threadPanel);
-        ui.threadPanel = null;
+        ui.threadPanel.children.forEach(function(el) {
+            ui.screen.remove(el);
+        });
         ui.screen.render();
     },
 
     populate: function(threadID, uid, history) {
-        if(!ui.threadPanel) {
-            ui.threadPanel = blessed.box({
-                parent: ui.screen,
-                left: "30%",
-                top: 0,
-                width: "70%",
-                height: "100%",
+        ui.clearThreadPanel();
+        var messages = blessed.log({
+            parent: ui.threadPanel,
+            left: 0,
+            top: 0,
+            height: "99%",
+            tags: true,
+            mouse: true,
+            border: 'line',
+            scrollback: 1000,
+            scrollbar: {
+                ch: ' ',
+                track: {
+                    bg: 'yellow'
+                },
                 style: {
-                    bg: "darkblue",
-                    fg: "white"
+                    inverse: true
                 }
-            });
-            var messages = blessed.log({
-                parent: ui.threadPanel,
-                left: 0,
-                top: 0,
-                height: "99%",
-                tags: true,
-                mouse: true,
-                border: 'line',
-                scrollback: 1000,
-                scrollbar: {
-                    ch: ' ',
-                    track: {
-                        bg: 'yellow'
-                    },
-                    style: {
-                        inverse: true
-                    }
-                }
-            });
-            /* TODO: Add names */
-            history.forEach(function(msg) {
-                messages.log((uid == msg.userID ? "                              " : "") + msg.body);
-            });
-        }
+            }
+        });
+        /* TODO: Add names */
+        history.forEach(function(msg) {
+            messages.log((uid == msg.userID ? "                              " : "") + msg.body);
+        });
         var panel = blessed.textbox({
             parent: ui.threadPanel,
             left: 0,

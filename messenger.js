@@ -28,11 +28,12 @@ var loaded_thread;
 function selectCallback(thread_name) {
     var thread = threads_by_name[thread_name];
     loaded_thread = thread;
+    ui.clearThreadPanel();
+    ui.threadLoading();
     fb.getThreadInfo(thread.threadID, function(err, info) {
         var lastMess = info.messageCount - 1;
         var firstMess = lastMess - 100 < 0 ? 0 : lastMess - 100
         fb.getThreadHistory(thread.threadID, firstMess, lastMess, undefined, function(err, history) {
-            ui.clearThread();
             ui.populate(thread.threadID, uid, history);
         });
     });
@@ -51,11 +52,11 @@ ui.showLoginPrompt(EMAIL, PASSWORD, function(email, password, callback) {
     EMAIL = email
     PASSWORD = password
     login({email: email, password: password}, function(err, api) {
-        fb = api;
-        uid = fb.getCurrentUserID();
         if(err) {
             return callback(err);
         }
+        fb = api;
+        uid = fb.getCurrentUserID();
         fb.getThreadList(0, NUM_THREADS, function(err, arr) {
             threads = arr;
             arr.forEach(function(thr) {
