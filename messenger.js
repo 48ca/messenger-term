@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 var login = require("facebook-chat-api");
 var ui = require("./ui.js").ui;
 
