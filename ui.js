@@ -9,7 +9,9 @@ var input_styles = {
     bg: "black"
 }
 
+var select_callback;
 var thread_navigators = {}
+var threads = [];
 // The boxes on the left representing threads
 
 var ui = {
@@ -193,7 +195,8 @@ var ui = {
     },
 
     threadPanel: null,
-    showMainUI: function(threads, select_callback) {
+    showMainUI: function(_threads, _select_callback) {
+        threads = _threads;
         ui.clear();
 
         /*
@@ -221,6 +224,18 @@ var ui = {
             }
         });
         */
+        ui.genThreadNav();
+        select_callback = _select_callback;
+        ui.displayThreadsPane();
+        if(!threads.length) {
+            console.error("No threads to display!");
+        } else {
+            thread_navigators[threads[0].threadID].focus();
+        }
+        ui.screen.render();
+    },
+
+    genThreadNav: function() {
         thread_navigators.parent = blessed.box({
             scrollable: true,
             width: "30%",
@@ -237,6 +252,21 @@ var ui = {
                 }
             },
         });
+    },
+
+    genContentString: function(thr, max_w=thread_navigators.parent.width - 6) {
+        var content_name = thr.customName.length > max_w ?
+            thr.customName.substring(max_w - 3).trim() + "..." : thr.customName;
+        var content_snip = thr.snippet.length > max_w ?
+            thr.snippet.substring(max_w - 3).trim() + "..." : thr.snippet;
+        return "\n   "  + content_name + "\n   " + content_snip;
+    },
+
+    displayThreadsPane: function() {
+        if(thread_navigators.parent) {
+            ui.screen.remove(thread_navigators.parent);
+        }
+        ui.genThreadNav();
         var list = thread_navigators.parent;
         var thr_cnt = 0;
         var height = 4;
@@ -246,25 +276,21 @@ var ui = {
         var max_w = list.width - 6;
         threads.forEach(function(thr) {
             // list.pushItem(thr.customName);
-            var content_name = thr.customName.length > max_w ?
-                thr.customName.substring(max_w - 3).trim() + "..." : thr.customName;
-            var content_snip = thr.snippet.length > max_w ?
-                thr.snippet.substring(max_w - 3).trim() + "..." : thr.snippet;
-            var content = "\n   "  + thr.customName + "\n   " + thr.snippet;
             thread_navigators[thr.threadID] = blessed.box({
                 parent: thread_navigators.parent,
                 width: "100%",
                 height: height,
                 left: 0,
                 top: height * thr_cnt++,
-                content: content,
+                content: ui.genContentString(thr, max_w),
                 style: {
                     bg: thr.unreadCount > 0 ? 'magenta' : 'blue',
                     focus: {
-                        bg: 'orange',
+                        bg: '#ff8c00',
                     }
                 }
             });
+            thread_navigators[thr.threadID].thread = thr;
             var thr_nav = thread_navigators[thr.threadID];
             if(prev) {
                 thr_nav.prev = prev;
@@ -275,6 +301,9 @@ var ui = {
                     thr_nav.prev.focus();
                 });
             }
+            thr_nav.key('enter', function() {
+                select_callback(thr_nav.thread.threadID);
+            });
             prev = thr_nav;
             prev_id = thr.threadID;
         });
@@ -285,13 +314,6 @@ var ui = {
         prev.key(['down', 'right'], function() {
             thread_navigators[threads[0].threadID].focus();
         });
-        thread_navigators[threads[0].threadID].focus()
-
-        list.on('select', function(item) {
-            select_callback(item.content.split("\n")[0]);
-        });
-
-        ui.screen.render();
     },
 
     threadLoading: function() {
@@ -328,6 +350,22 @@ var ui = {
         ui.threadPanel.children.forEach(function(el) {
             ui.screen.remove(el);
         });
+        ui.screen.render();
+    },
+
+    bringToTop: function(thr) {
+        console.log("BRING TO TOP");
+        thread_navigators[thr.threadID].snippet = thr.snippet;
+        for(var i=0;i<threads.length;i++) {
+            if(threads[i].threadID == thr.threadID) break;
+        }
+        if(i < threads.length) {
+            threads.splice(i, i+1);
+        }
+        console.log("thr found");
+        threads.unshift(thr);
+        ui.displayThreadsPane();
+        console.log("render");
         ui.screen.render();
     },
 

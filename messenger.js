@@ -25,8 +25,8 @@ var uid;
 
 var loaded_thread;
 
-function selectCallback(thread_name) {
-    var thread = threads_by_name[thread_name];
+function selectCallback(threadID) {
+    var thread = threads_by_id[threadID];
     loaded_thread = thread;
     ui.clearThreadPanel();
     ui.threadLoading();
@@ -40,13 +40,51 @@ function selectCallback(thread_name) {
 };
 
 function addMessage(message) {
-    var thr = threads_by_id[message.threadID];
-    if(loaded_thread.threadID == thread.threadID) {
-        ui.populate(thread.threadID, uid, [message]);
-    } else {
-        ui.bringToTop(thread);
-    }
+    /* TODO: Make this more efficient without requiring two queries */
+    console.log("step 1");
+    fb.getThreadList(0, 10, function(err, arr) {
+        console.log("step 2");
+        var thr;
+        arr.forEach(function(el) {
+            if(el.threadID == message.threadID) {
+                thr = el;
+                return;
+            }
+        });
+        if(!thr) return console.error("!!! We have received a message from a non-existant thread");
+        console.log("step 3");
+        var name = genCustomName(thr);
+        thr.customName = name;
+        threads_by_name[name] = thr;
+        threads_by_id[message.threadID] = thr;
+
+        if(loaded_thread && loaded_thread.threadID == thr.threadID) {
+            ui.populate(thr.threadID, uid, [message]);
+        }
+        console.log("step 4");
+        ui.bringToTop(thr);
+    });
 };
+
+function genCustomName(thr) {
+    var name = thr.name;
+    if(!name) {
+        var part = thr.participants;
+        var ind = part.indexOf(uid);
+        if(ind > 0) {
+            part.splice(ind, 1);
+        }
+        if(part.length == 1) {
+            var fr = part[0];
+            if(fr_by_uid[fr]) {
+                name = fr_by_uid[fr].fullName;
+            }
+            /* TODO: make this work for non-friends */
+        }
+    }
+    if(!name) name = "UNDEFINED";
+    return name;
+}
 
 ui.showLoginPrompt(EMAIL, PASSWORD, function(email, password, callback) {
     EMAIL = email
@@ -60,22 +98,7 @@ ui.showLoginPrompt(EMAIL, PASSWORD, function(email, password, callback) {
         fb.getThreadList(0, NUM_THREADS, function(err, arr) {
             threads = arr;
             arr.forEach(function(thr) {
-                var name = thr.name;
-                if(!name) {
-                    var part = thr.participants;
-                    var ind = part.indexOf(uid);
-                    if(ind > 0) {
-                        part.splice(ind, 1);
-                    }
-                    if(part.length == 1) {
-                        var fr = part[0];
-                        if(fr_by_uid[fr]) {
-                            name = fr_by_uid[fr].fullName;
-                        }
-                        /* TODO: make this work for non-friends */
-                    }
-                }
-                if(!name) name = "UNDEFINED";
+                var name = genCustomName(thr);
                 thr.customName = name;
                 threads_by_name[name] = thr;
                 threads_by_id[thr.threadID] = thr;
