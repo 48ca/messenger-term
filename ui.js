@@ -167,6 +167,7 @@ var ui = {
         form.on('submit', function(data) {
             _username = username_field.value;
             _password = password_field.value;
+            form.setContent('Logging in...');
             callback(_username, _password, function() {
                 form.setContent('Login failed');
                 ui.screen.render();
@@ -369,37 +370,55 @@ var ui = {
         ui.screen.render();
     },
 
-    populate: function(threadID, uid, history) {
-        ui.clearThreadPanel();
-        var messages = blessed.log({
-            parent: ui.threadPanel,
-            left: 0,
-            top: 0,
-            height: "99%",
-            tags: true,
-            mouse: true,
-            border: 'line',
-            scrollback: 1000,
-            scrollbar: {
-                ch: ' ',
-                track: {
-                    bg: 'yellow'
-                },
-                style: {
-                    inverse: true
+    messages: null,
+    message_height: null,
+    message_margin: 1,
+    populate: function(threadID, uid, messages, initialize=true) {
+        if(initialize) {
+            /* ui.messages is assumed to not exist */
+            ui.message_height = 0;
+            ui.messages = blessed.box({
+                parent: ui.threadPanel,
+                left: 0,
+                top: 0,
+                height: "99%",
+                tags: true,
+                mouse: true,
+                border: 'line',
+                scrollbar: {
+                    ch: ' ',
+                    track: {
+                        bg: 'yellow'
+                    },
+                    style: {
+                        inverse: true
+                    }
                 }
-            }
-        });
+            });
+            var inp = blessed.textbox({
+                parent: ui.threadPanel,
+                left: 0,
+                width: "100%",
+                height: 1,
+                top: "99%"
+            });
+            inp.focus();
+        }
         /* TODO: Add names */
-        history.forEach(function(msg) {
-            messages.log((uid == msg.userID ? "                              " : "") + msg.body);
-        });
-        var panel = blessed.textbox({
-            parent: ui.threadPanel,
-            left: 0,
-            width: "100%",
-            height: 1,
-            top: "99%"
+        message_height = ui.message_margin;
+        messages.forEach(function(msg) {
+            var m = blessed.box({
+                left: msg.userID == uid ? "50%" : 0,
+                top: message_height,
+                content: msg.body,
+                height: "fit",
+                width: 30,
+                style: {
+                    bg: msg.userID == uid ? "blue" : "lightgray"
+                }
+            });
+            // console.log(m);
+            // message_height += m.height + message_margin;
         });
         ui.screen.render();
     }

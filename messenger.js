@@ -61,7 +61,7 @@ function addMessage(message) {
         threads_by_id[message.threadID] = thr;
 
         if(loaded_thread && loaded_thread.threadID == thr.threadID) {
-            ui.populate(thr.threadID, uid, [message]);
+            ui.populate(thr.threadID, uid, [message], false);
         }
         console.log("step 4");
         ui.bringToTop(thr);
