@@ -255,7 +255,8 @@ var ui = {
         });
     },
 
-    genContentString: function(thr, max_w=thread_navigators.parent.width - 6) {
+    genContentString: function(thr, max_w) {
+		if (!max_w) { max_w = thread_navigators.parent.width - 6; }
         var content_name = thr.customName.length > max_w ?
             thr.customName.substring(max_w - 3).trim() + "..." : thr.customName;
         var content_snip = thr.snippet.length > max_w ?
@@ -349,7 +350,7 @@ var ui = {
     clearThreadPanel: function() {
         if(!ui.threadPanel) return;
         ui.threadPanel.children.forEach(function(el) {
-            ui.screen.remove(el);
+            ui.threadPanel.remove(el);
         });
         ui.screen.render();
     },
@@ -373,8 +374,8 @@ var ui = {
     messages: null,
     message_height: null,
     message_margin: 1,
-    populate: function(threadID, uid, messages, initialize=true) {
-        if(initialize) {
+    populate: function(threadID, uid, messages) {
+		if(!ui.messages) {
             /* ui.messages is assumed to not exist */
             ui.message_height = 0;
             ui.messages = blessed.box({
@@ -385,6 +386,7 @@ var ui = {
                 tags: true,
                 mouse: true,
                 border: 'line',
+				scrollable: true,
                 scrollbar: {
                     ch: ' ',
                     track: {
@@ -399,26 +401,29 @@ var ui = {
                 parent: ui.threadPanel,
                 left: 0,
                 width: "100%",
-                height: 1,
+                height: "1%",
                 top: "99%"
             });
-            inp.focus();
+            // inp.focus();
         }
-        /* TODO: Add names */
+        /* TODO: Add names
+		 * especially for group chats */
         message_height = ui.message_margin;
         messages.forEach(function(msg) {
             var m = blessed.box({
                 left: msg.userID == uid ? "50%" : 0,
                 top: message_height,
                 content: msg.body,
-                height: "fit",
+				parent: ui.messages,
+				height: 2,
+                // height: "fit",
                 width: 30,
                 style: {
                     bg: msg.userID == uid ? "blue" : "lightgray"
                 }
             });
-            // console.log(m);
-            // message_height += m.height + message_margin;
+            // console.log(m.content);
+            message_height += m.height + message_margin;
         });
         ui.screen.render();
     }

@@ -3,7 +3,8 @@
     "description": "A Facebook Messenger client written in Node",
     "author": "jamesthoughton@gmail.com",
     "dependencies": {
-        "facebook-chat-api": "git://github.com/jamesthoughton/facebook-chat-api#master",
+        "facebook-chat-api-nolog": "git://github.com/jamesthoughton/facebook-chat-api#master",
+		"facebook-chat-api": "1.2.0",
         "blessed": "0.1.81"
     },
     "repository": {"type": "git", "url": "git://github.com/jamesthoughton/messenger-term"},

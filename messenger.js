@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 
-var login = require("facebook-chat-api");
+DEBUG = process.env["DEBUG"].toLowerCase() == "true";
+
+var login;
+
+if(DEBUG) {
+	login = require("facebook-chat-api");
+} else {
+	login = require("facebook-chat-api-nolog");
+}
+
 var ui = require("./ui.js").ui;
 
 var EMAIL = process.env.MESSENGER_EMAIL;
@@ -61,7 +70,7 @@ function addMessage(message) {
         threads_by_id[message.threadID] = thr;
 
         if(loaded_thread && loaded_thread.threadID == thr.threadID) {
-            ui.populate(thr.threadID, uid, [message], false);
+            ui.populate(thr.threadID, uid, [message]);
         }
         console.log("step 4");
         ui.bringToTop(thr);
