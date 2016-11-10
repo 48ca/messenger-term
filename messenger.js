@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-DEBUG = process.env["DEBUG"].toLowerCase() == "true";
+DEBUG = (process.env["DEBUG"] || "false").toLowerCase() == "true";
 
 var login;
 
